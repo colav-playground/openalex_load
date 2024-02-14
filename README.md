@@ -32,6 +32,12 @@ and it requires about 2.5T of storage uncompressed.
 
 ## Usiing parallel load
 
+Put the script in the openalex-snapshot folder and run 
+`python load.py`
+
+it takes about 300 min using 20 jobs and a high speed nvme disk
+and it requires about 1T of storage in mongodb.
+
 
 
 # License
