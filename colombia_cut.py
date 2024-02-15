@@ -20,6 +20,12 @@ start = time.time()
 db[db_in]["works"].aggregate(pipeline)
 end = time.time()
 print(f"time = {end - start}")
+
+db[db_in]["works"].create_index("id")
+db[db_in]["works"].create_index("primary_location.source.publisher_id")
+
+
+
 #añadir a la descarga los works de las revistas colombianas
 ### con aggregate toma mucho más tiempo por que corre en secuencial.
 print(f"processing index from {db_in}.authors ")
