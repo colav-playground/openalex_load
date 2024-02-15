@@ -38,6 +38,12 @@ Put the script in the openalex-snapshot folder and run
 it takes about 300 min using 20 jobs and a high speed nvme disk
 and it requires about 1T of storage in mongodb.
 
+## Usiing colombia_cut.py
+
+please edit in the script de db_in (input openalex) db_out (output results)
+`python colombia_cut.py`
+
+this takes a lot of time, please be patient
 
 
 # License
