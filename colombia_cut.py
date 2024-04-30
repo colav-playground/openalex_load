@@ -1,11 +1,12 @@
 from pymongo import MongoClient
 from joblib import Parallel, delayed
 import time
-
+from colombia_cut_dois import colombia_cut_dois
 db_in="openalex_new"
-db_out="openalexco_new"
+db_out="openalexco_new2"
 
 db = MongoClient()
+
 
 ##pipeline for works (cuts works for colombia)
 pipeline=[
@@ -57,6 +58,9 @@ Parallel(n_jobs=20, verbose=10,backend="multiprocessing")(
     delayed(process_pwork)(work) for work in works)
 end = time.time()
 print(f"time = {end - start}")
+
+db[db_in]["works"].create_index("doi")
+colombia_cut_dois(db_in=db_in,db_out=db_out) # remember to edit global variables in colombia_cut_dois.py
 
 #añadir a la descarga los works de las revistas colombianas
 ### con aggregate toma mucho más tiempo por que corre en secuencial.

@@ -1,7 +1,7 @@
 from mohan.Similarity import Similarity
 from pymongo import MongoClient
 
-
+#toma unos 40mins
 es_index = "openalex_index"
 
 #creating the instance
