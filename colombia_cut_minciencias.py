@@ -20,7 +20,7 @@ paper_thd_high = 94
 
 
 categories_art = ['ART-00', 'ART-ART_A1', 'ART-ART_A2', 'ART-ART_B', 'ART-ART_C', 'ART-ART_D', 'ART-GC_ART']
-categories_books = ['PE-PE', 'PF-00', 'PF-EX', 'PF-PF', 'PIC-00', 'PIC-PIC', 'PID-00', 'PID-PID']
+categories_books = ['PE-PE', 'PID-00', 'PIC-00', 'PID-PID', 'PE-00', 'PF-00', 'PID-EX', 'PIC-PIC', 'PF-PF', 'PF-EX']
 
 categories = categories_art + categories_books
 pipeline = [
