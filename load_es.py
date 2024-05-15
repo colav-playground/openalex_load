@@ -1,6 +1,6 @@
 from mohan.Similarity import Similarity
 from pymongo import MongoClient
-
+from kahi_impactu_utils.String import  parse_mathml, parse_html
 #toma unos 40mins
 es_index = "openalex_index"
 
@@ -20,7 +20,9 @@ es_entries = []
 counter = 0
 for i in openalex:
     work = {}
-    work["title"] = i["title"]
+    title = parse_mathml(i["title"])
+    title = parse_html(title)
+    work["title"] = title
     if "primary_location" in i.keys() and i["primary_location"]:
         if i["primary_location"]["source"]:
             work["source"] = i["primary_location"]["source"]["display_name"]

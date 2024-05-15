@@ -2,8 +2,11 @@ from pymongo import MongoClient
 from joblib import Parallel, delayed
 import time
 from colombia_cut_dois import colombia_cut_dois
+from colombia_cut_minciencias import colombia_cut_minciencias
 db_in="openalex_new"
-db_out="openalexco_new2"
+db_out="openalexco_new"
+es_index = "openalex_index"
+jobs = 20
 
 db = MongoClient()
 
@@ -38,7 +41,7 @@ def get_pub_works(pid):
 print(f"processing publishers: getting works for each one")
 start = time.time()
 
-pworks = Parallel(n_jobs=20, verbose=10,backend="multiprocessing")(
+pworks = Parallel(n_jobs=jobs, verbose=10,backend="multiprocessing")(
     delayed(get_pub_works)(pid["id"]) for pid in publishers_ids)
 end = time.time()
 print(f"time = {end - start}")
@@ -54,13 +57,24 @@ def process_pwork(work):
 
 print(f"processing publishers: adding unique works to {db_out}.works ")
 start = time.time()
-Parallel(n_jobs=20, verbose=10,backend="multiprocessing")(
+Parallel(n_jobs=jobs, verbose=10,backend="multiprocessing")(
     delayed(process_pwork)(work) for work in works)
 end = time.time()
 print(f"time = {end - start}")
 
 db[db_in]["works"].create_index("doi")
+
+print(f"processing dois cut: adding works to {db_out}.works ")
+start = time.time()
 colombia_cut_dois(db_in=db_in,db_out=db_out) # remember to edit global variables in colombia_cut_dois.py
+end = time.time()
+print(f"time = {end - start}")
+
+print(f"processing minciencias: adding works to {db_out}.works ")
+start = time.time()
+colombia_cut_minciencias(db_in,db_out,es_index, jobs)
+end = time.time()
+print(f"time = {end - start}")
 
 #añadir a la descarga los works de las revistas colombianas
 ### con aggregate toma mucho más tiempo por que corre en secuencial.
@@ -83,7 +97,7 @@ def save_author(aid):
 
 print(f"processing authors from {db_out}.works to {db_out}.authors filtering from {db_in}.authors")
 start = time.time()
-r = Parallel(n_jobs=20, verbose=10,backend="multiprocessing", batch_size=100)(
+r = Parallel(n_jobs=jobs, verbose=10,backend="multiprocessing", batch_size=100)(
     delayed(save_author)(author["authors"]) for author in authors_ids)
 end = time.time()
 print(f"time = {end - start}")
