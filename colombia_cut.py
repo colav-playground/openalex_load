@@ -8,6 +8,7 @@ db_out="openalexco_new"
 es_index = "openalex_index"
 jobs = 20
 
+backend="threading"
 db = MongoClient()
 
 
@@ -41,7 +42,7 @@ def get_pub_works(pid):
 print(f"processing publishers: getting works for each one")
 start = time.time()
 
-pworks = Parallel(n_jobs=jobs, verbose=10,backend="multiprocessing")(
+pworks = Parallel(n_jobs=jobs, verbose=10,backend=backend)(
     delayed(get_pub_works)(pid["id"]) for pid in publishers_ids)
 end = time.time()
 print(f"time = {end - start}")
@@ -57,7 +58,7 @@ def process_pwork(work):
 
 print(f"processing publishers: adding unique works to {db_out}.works ")
 start = time.time()
-Parallel(n_jobs=jobs, verbose=10,backend="multiprocessing")(
+Parallel(n_jobs=jobs, verbose=10,backend=backend)(
     delayed(process_pwork)(work) for work in works)
 end = time.time()
 print(f"time = {end - start}")
@@ -66,13 +67,13 @@ db[db_in]["works"].create_index("doi")
 
 print(f"processing dois cut: adding works to {db_out}.works ")
 start = time.time()
-colombia_cut_dois(db_in=db_in,db_out=db_out) # remember to edit global variables in colombia_cut_dois.py
+colombia_cut_dois(db_in=db_in,db_out=db_out,backend=backend) # remember to edit global variables in colombia_cut_dois.py
 end = time.time()
 print(f"time = {end - start}")
 
 print(f"processing minciencias: adding works to {db_out}.works ")
 start = time.time()
-colombia_cut_minciencias(db_in,db_out,es_index, jobs)
+colombia_cut_minciencias(db_in,db_out,es_index, jobs,backend)
 end = time.time()
 print(f"time = {end - start}")
 
@@ -97,7 +98,7 @@ def save_author(aid):
 
 print(f"processing authors from {db_out}.works to {db_out}.authors filtering from {db_in}.authors")
 start = time.time()
-r = Parallel(n_jobs=jobs, verbose=10,backend="multiprocessing", batch_size=100)(
+r = Parallel(n_jobs=jobs, verbose=10,backend=backend, batch_size=100)(
     delayed(save_author)(author["authors"]) for author in authors_ids)
 end = time.time()
 print(f"time = {end - start}")

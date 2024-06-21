@@ -33,7 +33,7 @@ def process_doi(c:MongoClient, doi:str,db_in:str,db_out:str)->None:
    if work:
        c[db_out]["works"].insert_one(work)
 
-def colombia_cut_dois( db_in:str,db_out:str, jobs:int=20)->None:
+def colombia_cut_dois( db_in:str,db_out:str, jobs:int=20, backend="threading")->None:
     c=MongoClient()
     dois = []
 
@@ -79,4 +79,4 @@ def colombia_cut_dois( db_in:str,db_out:str, jobs:int=20)->None:
             if pdoi:
                 pdois.append(oa_doi_prefix+pdoi)
     pdois=list(set(pdois)-set(oa_dois_inserted)) #removing already cutted dois
-    out = Parallel(n_jobs=jobs,backend="threading",verbose=10,batch_size=4)(delayed(process_doi)(c,doi,db_in,db_out) for doi in pdois)
+    out = Parallel(n_jobs=jobs,backend=backend,verbose=10,batch_size=4)(delayed(process_doi)(c,doi,db_in,db_out) for doi in pdois)
