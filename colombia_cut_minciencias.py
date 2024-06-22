@@ -114,6 +114,8 @@ def check_work(openalex_in:Collection,openalex_out:Collection,title_work:str,aut
                     try:
                         openalex_out["works"].insert_one(oa_work)
                     except Exception as e:
+                        if oa_work is None:
+                            print("work was not found in elasticsearch, maybe es data have to be updated")
                         print(e)
                         print("Inserting multiples records in parallel can cause this, but it is not a problem.")
                         print("Continuing")
@@ -180,7 +182,7 @@ def process_one(openalex_in:Collection,openalex_out:Collection,cv_col:Collection
 #id_producto_pd no es único por que cambia para cada autor (los titulos pueden ser iguales)
 #tocar chequear si el producto ya está en la base de datos
 #si ya está no se inserta
-def colombia_cut_minciencias(db_in:str,db_out:str,es_index:str, jobs:int=20)->None:
+def colombia_cut_minciencias(db_in:str,db_out:str,es_index:str, jobs:int=20, backend:str="threading")->None:
     c = MongoClient()
     gr_col = c[yuku_db][yuku_grcol]
     paper_cursor = gr_col.aggregate(pipeline, allowDiskUse=True)

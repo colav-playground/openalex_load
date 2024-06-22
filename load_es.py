@@ -18,8 +18,12 @@ s.delete_index(es_index)
 
 es_entries = []
 counter = 0
+count_nones = 0
 for i in openalex:
     work = {}
+    if i["title"] is None:
+        count_nones += 1
+        continue
     title = parse_mathml(i["title"])
     title = parse_html(title)
     work["title"] = title
@@ -47,3 +51,5 @@ for i in openalex:
     if len(es_entries) == bulk_size:
         s.insert_bulk(es_entries)
         es_entries = []
+
+print("total works without title",count_nones)
