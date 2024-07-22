@@ -31,7 +31,9 @@ ranking_file="/storage/kahi_data/kahi_data/staff/produccion 2018-2023.xlsx"
 def process_doi(c:MongoClient, doi:str,db_in:str,db_out:str)->None:
    work=c[db_in]["works"].find_one({"doi":doi})
    if work:
-       c[db_out]["works"].insert_one(work)
+        found = c[db_out]["works"].count_documents({"id":work["id"]})
+        if found == 0:
+            c[db_out]["works"].insert_one(work)
 
 def colombia_cut_dois( db_in:str,db_out:str, jobs:int=20, backend="threading")->None:
     c=MongoClient()

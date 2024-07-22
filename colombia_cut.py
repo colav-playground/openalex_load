@@ -4,7 +4,7 @@ import time
 from colombia_cut_dois import colombia_cut_dois
 from colombia_cut_minciencias import colombia_cut_minciencias
 db_in="openalex_new"
-db_out="openalexco"
+db_out="openalexco_new"
 es_index = "openalex_index"
 jobs = 20
 
