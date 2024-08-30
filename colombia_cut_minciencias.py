@@ -19,18 +19,37 @@ paper_thd_low = 90
 paper_thd_high = 94
 
 
-categories_art = ['ART-00', 'ART-ART_A1', 'ART-ART_A2', 'ART-ART_B', 'ART-ART_C', 'ART-ART_D', 'ART-GC_ART']
-categories_books = ['PE-PE', 'PID-00', 'PIC-00', 'PID-PID', 'PE-00', 'PF-00', 'PID-EX', 'PIC-PIC', 'PF-PF', 'PF-EX']
+biblio = ["Publicaciones editoriales no especializadas",
+            "Notas científica",
+            "Informe Final de Investigación",
+            "Capítulos de libro de investigación",
+            "Libros de investigación",
+            "Artículos de investigación",
+            "Libros de Formación",
+            "Libros",
+            "Tesis de doctorado",
+            "Capítulos de libro",
+            "Documento de trabajo",
+            "Tesis de pregrado",
+            "Informe técnico final",
+            "Artículos",
+            "Edicion",
+            "Manuales y Guías Especializadas",
+            "Boletín divulgativo de resultado de investigación",
+            "Libros de Divulgación de investigación y/o Compilación de Divulgación",
+            "Tesis de maestria",
+            "Generación de contenido impresa"]
 
-categories = categories_art + categories_books
 pipeline = [
-    {'$match': {'id_tipo_pd_med': {'$in': categories}}},
+    {'$match': {"nme_producto_pd": {"$exists": True}}},
+    {'$match': {'nme_tipologia_pd': {'$in': biblio}}},
     {'$group': {'_id': '$id_producto_pd', 'originalDoc': {'$first': '$$ROOT'}}}, ## los productos se repiten por convocatoria
     {'$replaceRoot': {'newRoot': '$originalDoc'}}
 ]
 
 pipeline_zeros = [
-    {'$match': {'id_tipo_pd_med': {'$in': categories}}},
+    {'$match': {"nme_producto_pd": {"$exists": True}}},
+    {'$match': {'nme_tipologia_pd': {'$in': biblio}}},    
     {'$match': {'id_producto_pd':"0000000000"}}
 ]
 
