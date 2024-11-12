@@ -2,8 +2,8 @@ import glob
 from joblib import Parallel, delayed
 import os
 
-db_name = "openalex_new"
-entities = ('authors',  'concepts',  'funders',  'institutions',  'merged_ids',  'publishers',  'sources',  'works')
+db_name = "openalex"
+entities = ("authors", "concepts", "domains", "fields", "funders", "institutions", "merged_ids", "publishers", "sources", "subfields", "topics", "works")
 
 def load(file, entity):
     command = f"mongoimport -d {db_name} -c {entity} --type json --file  $i {file}"
@@ -13,4 +13,4 @@ def load(file, entity):
 
 for entity in entities:
     files = glob.glob(f"data/{entity}/*/*",recursive=True)
-    Parallel(n_jobs=20, backend="multiprocessing")(delayed(load)(file,entity) for file in files)
+    Parallel(n_jobs=72, backend="multiprocessing")(delayed(load)(file,entity) for file in files)

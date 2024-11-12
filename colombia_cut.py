@@ -3,10 +3,10 @@ from joblib import Parallel, delayed
 import time
 from colombia_cut_dois import colombia_cut_dois
 from colombia_cut_minciencias import colombia_cut_minciencias
-db_in = "openalex_new"
-db_out = "openalexco_new"
+db_in = "openalex"
+db_out = "openalexco"
 es_index = "openalex_index"
-jobs = 20
+jobs = 72
 
 backend = "threading"
 db = MongoClient()
