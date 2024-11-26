@@ -183,3 +183,43 @@ start = time.time()
 db[db_in]["sources"].aggregate(pipeline_copy)
 end = time.time()
 print(f"time = {end - start}")
+
+print(f"processing domains ")
+pipeline_copy = [
+    {"$match": {}},
+    {"$out": {"db": db_out, "coll": "domains"}}
+]
+start = time.time()
+db[db_in]["domains"].aggregate(pipeline_copy)
+end = time.time()
+print(f"time = {end - start}")
+
+print(f"processing fields ")
+pipeline_copy = [
+    {"$match": {}},
+    {"$out": {"db": db_out, "coll": "fields"}}
+]
+start = time.time()
+db[db_in]["fields"].aggregate(pipeline_copy)
+end = time.time()
+print(f"time = {end - start}")
+
+print(f"processing subfields ")
+pipeline_copy = [
+    {"$match": {}},
+    {"$out": {"db": db_out, "coll": "subfields"}}
+]
+start = time.time()
+db[db_in]["subfields"].aggregate(pipeline_copy)
+end = time.time()
+print(f"time = {end - start}")
+
+print(f"processing topics ")
+pipeline_copy = [
+    {"$match": {}},
+    {"$out": {"db": db_out, "coll": "topics"}}
+]
+start = time.time()
+db[db_in]["topics"].aggregate(pipeline_copy)
+end = time.time()
+print(f"time = {end - start}")
