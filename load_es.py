@@ -9,7 +9,8 @@ s = Similarity(es_index,es_uri= "http://localhost:9200",
                  es_auth = ('elastic', 'colav'))
 
 #taking openalex as example.
-openalex = MongoClient()["openalex_new"]["works"].find({},{"title":1,"primary_location.source":1,"publication_year":1,"biblio":1,"authorships":1,"_id":1})
+c = MongoClient()
+openalex = c["openalex"]["works"].find({},{"title":1,"primary_location.source":1,"publication_year":1,"biblio":1,"authorships":1,"_id":1})
 
 #example inserting documents to the Elastic Search index.
 bulk_size = 100
@@ -51,5 +52,7 @@ for i in openalex:
     if len(es_entries) == bulk_size:
         s.insert_bulk(es_entries)
         es_entries = []
-
+    counter+=1
+    if counter %1000:
+        print("progress ",counter)
 print("total works without title",count_nones)

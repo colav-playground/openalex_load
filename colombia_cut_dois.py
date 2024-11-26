@@ -6,14 +6,13 @@ from joblib import Parallel, delayed
 ###############################
 #Global variables, please edit#
 ############################### 
-oa_doi_prefix="https://doi.org/"
 
 #Google Scholar
 db_gs="scholar_colombia_2024"
 col_gs="data"
 
 #Scienti
-dbs_sci = ["scienti_udea_2023","scienti_udea_2023","scienti_unaula_2023","scienti_univalle_2023"]
+dbs_sci = ["scienti_udea_2024","scienti_udea_2023","scienti_unaula_2023","scienti_univalle_2024"]
 col_sci="product"
 
 # Sc
@@ -24,8 +23,8 @@ col_sc = "stage"
 db_wos = "wos_colombia"
 col_wos = "stage"
 
-# puntaje
-ranking_file="/storage/kahi_data/kahi_data/staff/produccion 2018-2023.xlsx"
+# CIARP Institutions
+ranking_files=["/storage/kahi_data/kahi_data/staff/formato_CIARP_UDEA_2024_11.xlsx"]
 
 
 def process_doi(c:MongoClient, doi:str,db_in:str,db_out:str)->None:
@@ -35,7 +34,7 @@ def process_doi(c:MongoClient, doi:str,db_in:str,db_out:str)->None:
         if found == 0:
             c[db_out]["works"].insert_one(work)
 
-def colombia_cut_dois( db_in:str,db_out:str, jobs:int=20, backend="threading")->None:
+def colombia_cut_dois( db_in:str,db_out:str, jobs:int=72, backend="threading")->None:
     c=MongoClient()
     dois = []
 
@@ -65,8 +64,9 @@ def colombia_cut_dois( db_in:str,db_out:str, jobs:int=20, backend="threading")->
         dois.append(doi["DI"])
 
     # puntaje
-    data = pd.read_excel(ranking_file)
-    dois.extend(data["DOI"].dropna().values.tolist())
+    for ranking_file in ranking_files:
+        data = pd.read_excel(ranking_file)
+        dois.extend(data["doi"].dropna().values.tolist())
 
     # dois from already cutted colombian data (taking it from db_out)
     data = list(c[db_out]["works"].find({"doi":{"$ne":None}}))
@@ -79,6 +79,6 @@ def colombia_cut_dois( db_in:str,db_out:str, jobs:int=20, backend="threading")->
         if doi is not None:
             pdoi=doi_processor(doi)
             if pdoi:
-                pdois.append(oa_doi_prefix+pdoi)
+                pdois.append(pdoi)
     pdois=list(set(pdois)-set(oa_dois_inserted)) #removing already cutted dois
     out = Parallel(n_jobs=jobs,backend=backend,verbose=10,batch_size=4)(delayed(process_doi)(c,doi,db_in,db_out) for doi in pdois)
