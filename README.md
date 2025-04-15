@@ -38,6 +38,11 @@ Put the script in the openalex-snapshot folder and run
 it takes about 300 min using 20 jobs and a high speed nvme disk
 and it requires about 1T of storage in mongodb.
 
+# Loading openalex to ElasticSearch
+Install first `pip install mohan kahi_impactu_utils pymongo`
+please edit **load_es.py** and run it.
+
+
 ## Usiing colombia_cut.py
 please edit global variables in colombia_cut_dois.py first then
 
