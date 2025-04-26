@@ -13,7 +13,7 @@ c = MongoClient()
 openalex = c["openalex"]["works"].find({},{"title":1,"primary_location.source":1,"publication_year":1,"biblio":1,"authorships":1,"_id":1})
 
 #example inserting documents to the Elastic Search index.
-bulk_size = 100
+bulk_size = 1000
 
 s.delete_index(es_index)
 

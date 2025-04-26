@@ -12,7 +12,7 @@ db_gs="scholar_colombia_2024"
 col_gs="data"
 
 #Scienti
-dbs_sci = ["scienti_udea_2024","scienti_udea_2023","scienti_unaula_2023","scienti_univalle_2024"]
+dbs_sci = ["scienti_udea_2024","scienti_uec_2024","scienti_unaula_2024","scienti_univalle_2024"]
 col_sci="product"
 
 # Sc
@@ -23,8 +23,39 @@ col_sc = "stage"
 db_wos = "wos_colombia"
 col_wos = "stage"
 
+#DSpace
+db_dsapce="oxomoc_colombia"
+dspace_pipeline = [
+  {
+    "$project": {
+      "doi": {
+        "$filter": {
+          "input": {
+            "$cond": [
+              { "$isArray": "$OAI-PMH.GetRecord.record.metadata.dim:dim.dim:field" },
+              "$OAI-PMH.GetRecord.record.metadata.dim:dim.dim:field",
+              [ "$OAI-PMH.GetRecord.record.metadata.dim:dim.dim:field" ]
+            ]
+          },
+          "as": "field",
+          "cond": {
+            "$and": [
+              { "$eq": ["$$field.@element", "identifier"] },
+              { "$eq": ["$$field.@qualifier", "doi"] }
+            ]
+          }
+        }
+      },
+        "_id":0
+    }
+      
+  }
+]
+
+
 # CIARP Institutions
-ranking_files=["/storage/kahi_data/kahi_data/staff/formato_CIARP_UDEA_2024_11.xlsx"]
+# CIARP Univalle, no tiene ningún doi
+ciarp_files=["/storage/kahi_data/kahi_data/staff/formato_CIARP_UDEA_2024_11.xlsx"]
 
 
 def process_doi(c:MongoClient, doi:str,db_in:str,db_out:str)->None:
@@ -63,9 +94,24 @@ def colombia_cut_dois( db_in:str,db_out:str, jobs:int=72, backend="threading")->
     for doi in data:
         dois.append(doi["DI"])
 
+    #DSpace
+    db=c["oxomoc_colombia"]
+    collections = db.list_collection_names(filter= {"name": {"$regex": r"^dspace.*records$"}})
+    for collection in collections:
+        print(f"INFO: processing {collection}")
+        cursor=db[collection].aggregate(dspace_pipeline)
+        for doc in cursor:
+            if doc["doi"] == None:
+                continue
+            for raw_doi in doc["doi"]:
+                if raw_doi:
+                    if not "#text" in raw_doi:
+                        continue
+                    dois.append(raw_doi["#text"])
+
     # puntaje
-    for ranking_file in ranking_files:
-        data = pd.read_excel(ranking_file)
+    for ciarp_file in ciarp_files:
+        data = pd.read_excel(ciarp_file)
         dois.extend(data["doi"].dropna().values.tolist())
 
     # dois from already cutted colombian data (taking it from db_out)
@@ -81,4 +127,5 @@ def colombia_cut_dois( db_in:str,db_out:str, jobs:int=72, backend="threading")->
             if pdoi:
                 pdois.append(pdoi)
     pdois=list(set(pdois)-set(oa_dois_inserted)) #removing already cutted dois
+    print(f"INFO: dois found = {len(pdois)}")
     out = Parallel(n_jobs=jobs,backend=backend,verbose=10,batch_size=4)(delayed(process_doi)(c,doi,db_in,db_out) for doi in pdois)
