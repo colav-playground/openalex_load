@@ -10,7 +10,7 @@ s = Similarity(es_index,es_uri= "http://localhost:9200",
 
 #taking openalex as example.
 c = MongoClient()
-openalex = c["openalex"]["works"].find({},{"title":1,"primary_location.source":1,"publication_year":1,"biblio":1,"authorships":1,"_id":1})
+openalex = c["openalex"]["works"].find({"title":{"$exists":True}},{"title":1,"primary_location.source":1,"publication_year":1,"biblio":1,"authorships":1,"_id":1})
 
 #example inserting documents to the Elastic Search index.
 bulk_size = 1000
@@ -34,11 +34,11 @@ for i in openalex:
         work["source"] = ""
     else:
         work["source"] = ""
-    work["year"] = i["publication_year"]
-    work["volume"] = i["biblio"]["volume"]
-    work["issue"] = i["biblio"]["issue"]
-    work["first_page"] = i["biblio"]["first_page"]
-    work["last_page"] = i["biblio"]["last_page"]
+    work["year"] = i["publication_year"] if "publication_year" in i.keys() else ""
+    work["volume"] = i["biblio"]["volume"] if "volume" in i["biblio"].keys() else ""
+    work["issue"] = i["biblio"]["issue"] if "issue" in i["biblio"].keys() else ""
+    work["first_page"] = i["biblio"]["first_page"]  if "first_page" in i["biblio"].keys() else ""
+    work["last_page"] = i["biblio"]["last_page"] if "last_page" in i["biblio"].keys() else ""
     authors = []
     for author in i['authorships']:
         if "display_name" in author["author"].keys():
