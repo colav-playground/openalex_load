@@ -14,6 +14,8 @@ db = MongoClient()
 
 db[db_out]["works"].create_index({"type": 1, "type_crossref": 1, "id": 1})
 
+
+
 # pipeline for works (cuts works for colombia)
 pipeline = [
     {"$project": {"_id": 0}},
@@ -28,30 +30,30 @@ db[db_in]["works"].aggregate(pipeline)
 end = time.time()
 print(f"time = {end - start}")
 
-print(f"processing indexes to get works from colombian publishers")
+print(f"processing indexes to get works from colombian sources")
 start = time.time()
 db[db_in]["works"].create_index("id")
-db[db_in]["works"].create_index("locations.source.publisher_id")
+db[db_in]["works"].create_index("locations.source.id")
 db[db_out]["works"].create_index("id")
 end = time.time()
 print(f"time = {end - start}")
 
 
-publishers_ids = list(db[db_in]["publishers"].find(
-    {"country_codes": "CO"}, {"id": 1}))
+sources_ids = list(db[db_in]["sources"].find(
+    {"country_code": "CO"}, {"id": 1}))
 
 
 def get_pub_works(pid):
     works = list(db[db_in]["works"].find(
-        {"locations.source.publisher_id": pid}))
+        {"locations.source.id": pid}))
     return works
 
 
-print(f"processing publishers: getting works for each one")
+print(f"processing sources: getting works for each one")
 start = time.time()
 
 pworks = Parallel(n_jobs=jobs, verbose=10, backend=backend)(
-    delayed(get_pub_works)(pid["id"]) for pid in publishers_ids)
+    delayed(get_pub_works)(pid["id"]) for pid in sources_ids)
 end = time.time()
 print(f"time = {end - start}")
 works = []
