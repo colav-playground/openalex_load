@@ -3,6 +3,9 @@ from kahi_impactu_utils.Utils import doi_processor
 import pandas as pd
 from pandas import isna
 from joblib import Parallel, delayed
+from bs4 import BeautifulSoup
+import re
+
 ###############################
 #Global variables, please edit#
 ############################### 
@@ -23,8 +26,12 @@ col_sc = "stage"
 db_wos = "wos_colombia"
 col_wos = "stage"
 
+#DAM
+db_dam = "yuku_2025_2"
+col_dam = "cvlac_stage_raw"
+
 #DSpace
-db_dsapce="oxomoc_colombia"
+db_dspace="oxomoc_colombia"
 dspace_pipeline = [
   {
     "$project": {
@@ -57,6 +64,26 @@ dspace_pipeline = [
 # CIARP Univalle, no tiene ningún doi
 ciarp_files=["/storage/kahi_data/kahi_data/staff/formato_CIARP_UDEA_2024_11.xlsx"]
 
+
+def extract_dois_from_html(html_string):
+    """
+    extract dois from html in DAM
+    """
+    soup = BeautifulSoup(html_string, "html.parser")
+
+    # Regex para DOIs muy robusto:
+    doi_regex = re.compile(r'10\.\d{4,9}/[^\s"<]+', re.IGNORECASE)
+
+    dois = []
+
+    # Recorrer todo el texto del documento
+    for text in soup.stripped_strings:
+        if "doi" in text.lower():  # contiene DOI
+            found = doi_regex.findall(text)
+            dois.extend(found)
+
+    # Eliminamos duplicados
+    return list(dict.fromkeys(dois))
 
 def process_doi(c:MongoClient, doi:str,db_in:str,db_out:str)->None:
    work=c[db_in]["works"].find_one({"doi":doi})
@@ -95,7 +122,7 @@ def colombia_cut_dois( db_in:str,db_out:str, jobs:int=72, backend="threading")->
         dois.append(doi["DI"])
 
     #DSpace
-    db=c["oxomoc_colombia"]
+    db=c[db_dspace]
     collections = db.list_collection_names(filter= {"name": {"$regex": r"^dspace.*records$"}})
     for collection in collections:
         print(f"INFO: processing {collection}")
@@ -114,6 +141,15 @@ def colombia_cut_dois( db_in:str,db_out:str, jobs:int=72, backend="threading")->
         data = pd.read_excel(ciarp_file)
         dois.extend(data["doi"].dropna().values.tolist())
 
+    # DAM
+    cursor = c[db_dam][col_dam].find()
+    raw = Parallel(n_jobs=-1, verbose=10)(
+        delayed(extract_dois_from_html)(item["html"])
+        for item in cursor
+    )
+    _dois = [d for sub in raw for d in sub if d]
+    _dois = list(set(_dois))
+    dois.extend(_dois)
     # dois from already cutted colombian data (taking it from db_out)
     data = list(c[db_out]["works"].find({"doi":{"$ne":None}}))
     oa_dois_inserted=[]
