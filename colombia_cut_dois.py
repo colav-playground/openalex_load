@@ -64,26 +64,28 @@ dspace_pipeline = [
 # CIARP Univalle, no tiene ningún doi
 ciarp_files=["/storage/kahi_data/kahi_data/staff/formato_CIARP_UDEA_2024_11.xlsx"]
 
+# DAM
+def extract_doi_candidates_from_html(html: str) -> list[str]:
+  '''
+  Extract raw DOI-like strings from the HTML content
+  '''
+  candidate_pattern = r"10\.\d{3,}/[^\s\"'<]+"
+  candidates = re.findall(candidate_pattern, html, flags=re.IGNORECASE)
+  return candidates
 
-def extract_dois_from_html(html_string):
-    """
-    extract dois from html in DAM
-    """
-    soup = BeautifulSoup(html_string, "html.parser")
+def extract_valid_dois(html: str) -> list[str]:
+  '''
+  Return unique, normalized DOIs found in the HTML using doi_processor
+  '''
+  candidates = extract_doi_candidates_from_html(html)
+  valid_dois = set()
 
-    # Regex para DOIs muy robusto:
-    doi_regex = re.compile(r'10\.\d{4,9}/[^\s"<]+', re.IGNORECASE)
+  for cand in candidates:
+      doi_url = doi_processor(cand)
+      if doi_url:
+          valid_dois.add(doi_url)
 
-    dois = []
-
-    # Recorrer todo el texto del documento
-    for text in soup.stripped_strings:
-        if "doi" in text.lower():  # contiene DOI
-            found = doi_regex.findall(text)
-            dois.extend(found)
-
-    # Eliminamos duplicados
-    return list(dict.fromkeys(dois))
+  return valid_dois
 
 def process_doi(c:MongoClient, doi:str,db_in:str,db_out:str)->None:
    work=c[db_in]["works"].find_one({"doi":doi})
@@ -144,7 +146,7 @@ def colombia_cut_dois( db_in:str,db_out:str, jobs:int=72, backend="threading")->
     # DAM
     cursor = c[db_dam][col_dam].find()
     raw = Parallel(n_jobs=-1, verbose=10)(
-        delayed(extract_dois_from_html)(item["html"])
+        delayed(extract_valid_dois)(item["html"])
         for item in cursor
     )
     _dois = [d for sub in raw for d in sub if d]
